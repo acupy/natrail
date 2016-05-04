@@ -1,6 +1,8 @@
 import urllib2
+from threads import NatrailThread
 
 URL = 'http://ojp.nationalrail.co.uk/find/stationsDLRLU/'
+
 
 class Station(object):
     def __init__(self, abbrevation, name, latitude, longitude, postcode):
@@ -19,19 +21,27 @@ class Station(object):
     @staticmethod
     def get_all_station():
 
-        urls = []
+        threads = []
+        stations = []
 
         for i in range(97, 123):
-            urls.append('{0}{1}'.format(URL, chr(i)))
+            the_thread = NatrailThread(Station.__get_stations, chr(i), stations)
+            the_thread.start()
+            threads.append(the_thread)
 
-        stations = []
-        for url in urls:
-            req = urllib2.Request(url)
-            response = urllib2.urlopen(req)
-
-            arr = eval(response.read())
-
-            for station in filter(lambda i: i[0] != 'All Stations', arr):
-                stations.append(Station(station[0], station[1], station[7], station[8], station[9]))
+        for the_thread in threads:
+            the_thread.join()
 
         return stations
+
+    @staticmethod
+    def __get_stations(station_name, stations):
+
+        url = '{0}{1}'.format(URL, station_name)
+        req = urllib2.Request(url)
+        response = urllib2.urlopen(req)
+
+        arr = eval(response.read())
+
+        for station in filter(lambda i: i[0] != 'All Stations', arr):
+            stations.append(Station(station[0], station[1], station[7], station[8], station[9]))
