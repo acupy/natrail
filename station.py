@@ -11,7 +11,7 @@ class Station(object):
         self.latitude = latitude
         self.longitude = longitude
         self.postcode = postcode
-         
+
     def __repr__(self, *args, **kwargs):
         return '{0}({1}, {2}) latitude: {3} / longitude {4}'.format(self.name,
                                                                     self.abbrevation,
@@ -22,7 +22,7 @@ class Station(object):
     def get_all_station():
 
         threads = []
-        stations = []
+        stations = {}
 
         for i in range(97, 123):
             the_thread = NatrailThread(Station.__get_stations, chr(i), stations)
@@ -32,7 +32,7 @@ class Station(object):
         for the_thread in threads:
             the_thread.join()
 
-        return stations
+        return sorted(stations.values(), key=lambda s: s.name)
 
     @staticmethod
     def __get_stations(station_name, stations):
@@ -44,4 +44,5 @@ class Station(object):
         arr = eval(response.read())
 
         for station in filter(lambda i: i[0] != 'All Stations', arr):
-            stations.append(Station(station[0], station[1], station[7], station[8], station[9]))
+            if station[8] and station[9]:
+                stations[station[1]] = Station(station[0], station[1], station[7], station[8], station[9])
